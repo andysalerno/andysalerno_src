@@ -1,0 +1,8 @@
+baseURL = "https://andysalerno.com"
+title = "/dev/null"
+languageCode = "en-us"
+theme = "temple"
+
+[params]
+highlight = true
+
