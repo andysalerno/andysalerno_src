@@ -5,33 +5,33 @@
   <url>
     <loc>https://andysalerno.com/about/</loc>
     <lastmod>2018-06-07T23:58:58-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://andysalerno.com/posts/hello/</loc>
-    <lastmod>2018-06-07T23:55:02-07:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://andysalerno.com/</loc>
     <lastmod>2018-06-07T23:58:58-07:00</lastmod>
-    <priority>0</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://andysalerno.com/categories/</loc>
-    <priority>0</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>https://andysalerno.com/posts/</loc>
-    <lastmod>2018-06-07T23:55:02-07:00</lastmod>
-    <priority>0</priority>
+    <loc>https://andysalerno.com/series/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://andysalerno.com/tags/</loc>
-    <priority>0</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   
 </urlset>

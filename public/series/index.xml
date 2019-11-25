@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>andy salerno</title>
-    <link>https://andysalerno.com/</link>
-    <description>Recent content on andy salerno</description>
+    <title>Series on andy salerno</title>
+    <link>https://andysalerno.com/series/</link>
+    <description>Recent content in Series on andy salerno</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Thu, 07 Jun 2018 23:58:58 -0700</lastBuildDate>
     
-        <atom:link href="https://andysalerno.com/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="https://andysalerno.com/series/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
