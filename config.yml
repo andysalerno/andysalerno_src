@@ -39,9 +39,15 @@ menu:
 
     - identifier: posts
       name: Posts
-      title: Posts
+      title: Writings
       url: /posts
       weight: 2
+
+    - identifier: photography
+      name: Street photography
+      title: Street photography
+      url: /photography
+      weight: 3
 
     - identifier: tags
       name: Tags
