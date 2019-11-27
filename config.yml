@@ -181,5 +181,4 @@ params:
 
   # Sidebar only the following widgets. you can remove any you don't like it.
   widgets:
-    - recent_posts
 
