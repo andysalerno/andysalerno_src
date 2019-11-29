@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     image.src = image.dataset.src;
                     image.classList.remove("lazy");
                     imageObserver.unobserve(image);
+                    resizeImage(image);
                 }
             });
         });
@@ -46,4 +47,47 @@ document.addEventListener("DOMContentLoaded", function () {
         window.addEventListener("resize", lazyload);
         window.addEventListener("orientationChange", lazyload);
     }
-})
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    // add event to all images to resize upon load
+    var images = document.getElementsByClassName("photography-image");
+    for (var i = 0; i < images.length; i++) {
+        var image = images[i];
+        image.addEventListener("load", function (i) {
+            console.log("Image loaded.");
+            resizeImage(i.target);
+        });
+    }
+
+    var resizeImages = function () {
+        for (var i = 0; i < images.length; i++) {
+            var image = images[i];
+            resizeImage(image);
+        }
+    }
+
+    window.addEventListener("resize", resizeImages);
+
+    resizeImages();
+});
+
+function resizeImage(image) {
+    if (image.naturalWidth > image.naturalHeight) {
+        image.width = Math.min(image.parentElement.clientWidth - 100, 900);
+        // image.width = Math.min(window.innerWidth - 100, 900);
+    } else {
+        image.width = Math.min(image.parentElement.clientWidth - 100, 500);
+        // image.width = Math.min(window.innerWidth - 200, 600);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    // un-set the src for all image so they don't load immediately.
+    var images = document.getElementsByClassName("photography-image");
+    for (var i = 0; i < images.length; i++) {
+        var image = images[i];
+        image.dataset.src = image.src;
+        image.src = "";
+    }
+});
