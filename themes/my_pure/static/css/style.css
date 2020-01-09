@@ -58,17 +58,23 @@
   margin-bottom: 2em;
 }
 
-.link-override {
-    color: #2196f3;
-}
-
-.link-override:hover {
-    text-decoration: underline;
-}
-
 .dark-mode {
   background-color: #212124;
 }
+
+body {
+   background-color: #3D5A80;
+   color: #E0FBFC;
+   max-width: 70px;
+ }
+
+a {
+  color: #98C1D9;
+ }
+
+a:visited {
+  color: #293241;
+ }
 
 .margin12 {
   margin: 12px;
@@ -79,5 +85,9 @@
 }
 
 .max-width {
-  max-width: 130px;
+  max-width: 900px;
+}
+
+.min-width {
+  min-width: 100px;
 }

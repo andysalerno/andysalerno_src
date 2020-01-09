@@ -1,5 +1,5 @@
 {{- define "content"}}
-<main class="row-container grow noshrink">
+<main class="row-container grow min-width max-width">
   {{- if eq .Type "photography" }}
     {{- partial "photography.html" . }}
   {{- else if eq .Type "posts" }}
