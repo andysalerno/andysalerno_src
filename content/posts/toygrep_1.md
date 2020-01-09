@@ -27,7 +27,7 @@ I had a few motivations for creating Toygrep; I wanted to answer some questions,
 1. How is Ripgrep designed, and what design decisions give it such incredible performance?
 1. What can I learn from Ripgrep?
 
-In this series of posts, I will give an overview of the development process (including code samples), discuss things I learned or things that surprised me, and attempt to answer the questions listed above.
+In this series of posts, I will give an overview of the development process, discuss things I learned or things that surprised me, and attempt to answer the questions listed above.
 
 So let's jump in!
 
@@ -45,7 +45,7 @@ The two obvious benefits of this are:
 1. It's simple to use, and *fast* (if at times I sound a bit in awe of BurntSushi, it's because I am).
 1. Since it's the same regex engine powering Ripgrep, it's a bit of a controlled variable in this experiment.
 
-Here's the main file in [commit 460cb4b8](https://github.com/andysalerno/toygrep/blob/460cb4b860505be64cbd48cef65e15b3a1fe2578/src/main.rs), the first commit that can achieve the "simplest possible user scenario" described above. Surely the final implementation will look nothing like this, but this will help ground us and give us a jumping-off point.
+Here's the main file in [Toygrep commit 460cb4b8](https://github.com/andysalerno/toygrep/blob/460cb4b860505be64cbd48cef65e15b3a1fe2578/src/main.rs), the first commit that can achieve the "simplest possible user scenario" described above. Surely the final implementation will look nothing like this, but this will help ground us and give us a jumping-off point.
 
 The `main()` function:
 ```rust
@@ -86,6 +86,8 @@ async fn search_file(file_path: &str, pattern: &Regex) -> IoResult<()> {
     Ok(())
 }
 ```
+
+We read the whole file into memory, make an iterator over its lines, and try the regex pattern against each one.
 
 So, how does this barely-functional, "hello-world" grep perform?
 

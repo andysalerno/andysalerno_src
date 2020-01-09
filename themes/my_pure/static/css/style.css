@@ -65,16 +65,12 @@
 body {
    background-color: #3D5A80;
    color: #E0FBFC;
-   max-width: 70px;
+   font-family: sans-serif;
  }
 
 a {
   color: #98C1D9;
- }
-
-a:visited {
-  color: #293241;
- }
+}
 
 .margin12 {
   margin: 12px;
@@ -90,4 +86,16 @@ a:visited {
 
 .min-width {
   min-width: 100px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+th, td {
+  padding: 15px;
 }
