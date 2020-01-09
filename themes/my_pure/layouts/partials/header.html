@@ -1,0 +1,21 @@
+<header class="navbar-left">
+  <nav>
+    <ul>
+      {{- $icon := .Site.Params.menuIcons }}
+      {{- range .Site.Menus.main -}}
+      {{- $lowerItemName := lower .Name}}
+      <li>
+        <a href="{{- .URL | safeURL }}">
+          {{- with $icon.enable }}
+          {{- range $name,$value := $icon}}
+          {{- if eq $name $lowerItemName }}
+          {{- end}}
+          {{- end }}
+          {{- end}}
+          <span class="menu-title">{{- .Title  }}</span>
+        </a>
+      </li>
+      {{- end}}
+    </ul>
+  </nav>
+</header>

@@ -1,0 +1,43 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta name="theme-color" content="#000000" />
+  <meta http-equiv="window-target" content="_top" />
+  {{- if .Keywords -}}
+  {{ $length := len .Keywords | add -1 -}}
+  <meta name="keywords"
+    content="{{ range $index, $element := .Keywords }}{{ $element | safeHTML }}{{if ne $index $length }}, {{ end }}{{ end }}" />
+  {{- else if .Site.Params.keywords -}}
+  {{ $length := len .Site.Params.keywords | add -1 -}}
+  <meta name="keywords"
+    content="{{ range $index, $element := .Site.Params.keywords }}{{ $element | safeHTML }}{{if ne $index $length }}, {{ end }}{{ end }}" />
+  {{- end }}
+
+  {{- if .Description -}}
+  <meta name="description" content="{{ .Description | safeHTML }}" />
+  {{- else if .IsPage -}}
+  <meta name="description" content="{{ .Summary | plainify }}" />
+  {{- else if .Site.Params.description -}}
+  <meta name="description" content="{{ .Site.Params.description | safeHTML }}" />
+  {{- end -}}
+
+  <title>
+    {{- block "title" . -}}
+    {{ if .IsPage }}{{ .Title }} - {{ .Site.Title }}{{ else }}{{ .Site.Title }}{{ end }}
+    {{- end -}}
+  </title>
+
+  {{ range .AlternativeOutputFormats -}}
+  {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
+  {{ end -}}
+
+  <script src="/static/lazy.js"></script>
+  <link rel="stylesheet" href="{{ "css/style.css" | absURL }}">
+
+</head>

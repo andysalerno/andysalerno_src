@@ -1,0 +1,9 @@
+{{- define "content"}}
+<main class="row-container grow noshrink">
+  {{- if eq .Type "photography" }}
+    {{- partial "photography.html" . }}
+  {{- else if eq .Type "posts" }}
+    {{- partial "article.html" . }}
+  {{- end }}
+</main>
+{{- end}}
