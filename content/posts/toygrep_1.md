@@ -1,26 +1,30 @@
 ---
-title: "(What I learned) Creating a simple Ripgrep clone (Part 1)"
+title: "(What I learned) Creating Toygrep, a simple Ripgrep clone (Part 1)"
 date: 2019-11-30T00:58:25-08:00
 draft: true
 ---
 
 ### Toygrep
 
-Toygrep [(github link)](https://github.com/andysalerno/toygrep) is an attempt to build a simple [Ripgrep](https://github.com/BurntSushi/ripgrep) clone using async/await, powered by [async-std](https://docs.rs/async-std/1.4.0/async_std/). While Ripgrep is a mature, fully-featured, production-ready tool, Toygrep is purely educational and intends to achieve as much as possible as simply as possible, while using only a few dependencies such as the regex crate.
+Toygrep [(github link)](https://github.com/andysalerno/toygrep) is an attempt to build a simple [Ripgrep](https://github.com/BurntSushi/ripgrep) clone using async/await, powered by [async-std](https://docs.rs/async-std/1.4.0/async_std/). While Ripgrep is a mature, fully-featured, production-ready tool, Toygrep is purely educational and intends to achieve as much as possible as simply as possible, while using only a few dependencies such as the regex crate that powers Ripgrep.
 
-### Features
+#### Features
 - [x] Fast recursive file search of regex patterns (via regex crate)
 - [x] Search piped input streams
 - [x] Ignores binary files
 - [x] Simple arguments for common regex scenarios like ignore-case and whole-word matching
 - [x] Colored and grouped output by default
 
-### Missing
 I plan to implement the following in time:
-- [ ] .gitignore parsing
+- [ ] .gitignore parsing a la Ripgrep
+
+No current plans to implement these, but maybe in the future:
+- [ ] searching within archives a la Ripgrep
+
+#### Motivation
 
 I had a few motivations for creating Toygrep; I wanted to answer some questions, in no particular order:
-1. Ripgrep makes use of an internal work scheduler, one of (many) design decisions that help it achieve its famous performance.  If I use async/await + async-std to do this for me, how close can I get?
+1. Ripgrep makes use of an internal work scheduler, one of (many) design decisions that help it achieve its famous performance.  If I use async/await + async-std to do this for me, how close can I get to its speed?
 1. On a scale of "painful" to "delightful", where is is async/await in Rust today for a project like this?
 1. What subset of Ripgrep functionality/performance can be achieved in a short two-week period as a personal project?
 1. What can I achieve in a personal a project over a few weeks' time during my winter holiday?
@@ -34,6 +38,8 @@ So let's jump in!
 
 ### Part 1: The dumbest thing that works
 
+Rewinding the clock to Day 1. (If you're only interested in the very final result, I will link that part here once I publish it, or you can simply peruse [the latest code in the github repo.](https://github.com/andysalerno/toygrep)).
+
 I started by implementing "the dumbest thing that works" for the simplest possible user scenario:  
 *Search a single file for a simple regex pattern and print the result.*
 
@@ -45,7 +51,7 @@ The two obvious benefits of this are:
 1. It's simple to use, and *fast* (if at times I sound a bit in awe of BurntSushi, it's because I am).
 1. Since it's the same regex engine powering Ripgrep, it's a bit of a controlled variable in this experiment.
 
-Here's the main file in [Toygrep commit 460cb4b8](https://github.com/andysalerno/toygrep/blob/460cb4b860505be64cbd48cef65e15b3a1fe2578/src/main.rs), the first commit that can achieve the "simplest possible user scenario" described above. Surely the final implementation will look nothing like this, but this will help ground us and give us a jumping-off point.
+Here's the main file in [Toygrep commit 460cb4b8](https://github.com/andysalerno/toygrep/blob/460cb4b860505be64cbd48cef65e15b3a1fe2578/src/main.rs), the first commit that can achieve the "simplest possible user scenario" described above. The final implementation looks nothing like this, but this will help ground us and give us a jumping-off point.
 
 The `main()` function:
 ```rust
@@ -87,7 +93,7 @@ async fn search_file(file_path: &str, pattern: &Regex) -> IoResult<()> {
 }
 ```
 
-We read the whole file into memory, make an iterator over its lines, and try the regex pattern against each one.
+We read the whole file into memory(!!), make an iterator over its lines, and try the regex pattern against each one.
 
 So, how does this barely-functional, "hello-world" grep perform?
 
@@ -103,24 +109,51 @@ I created a simple benchmark suite to track Toygrep's performance. A quick discl
 
 Benchmarking is broken down into a matrix of several common scenarios:
 
-|                                       | |
-|---------------------------------------|-------------|
-| Query results                | one query gives few results, another gives many              |
-| File size |             one file is "small" at 5.5MB, another is "large" at 13.3GB  |
-| File count |  the query is run against one file, or a large recursive directory with many files (small-file scenarios only; 136 of the small files are copied into a directory tree with max depth 3)             |
+|                                       | Query w/ few matches | Query w/ many matches |
+|---------------------------------------|-------------|--------------|
+| One small file (5.5mb)                |             |              |
+| One large file (13.3gb)               |             |  (N/A)       |
+| Many nested small files (136 x 5.5mb) |             |              |
 
-The benchmark suite is all combinations of the above.
+The 5.5mb "small" file contains the full works of Shakespeare, found here (link TODO).  
+The 13.3gb "large" file is from the OpenSubtitles corpus found here (link TODO).
 
-A benchmark directory contains 136 files. Each file is identical and contains the complete work of Shakespeare (link to MIT source).
+The options used are the default (no flags) for the tool being benchmarked. Of course, a test between two grep-likes would be unfair if one had certain functionality enabled (e.g. line number printing) and the other did not. I consider this an acceptible drawback because, again, the test is not intended to be "fair", but only to measure Toygrep's progress; additionally, the end result is for Toygrep to implement most of Ripgrep's defaults anyway, limiting this disparity.
 
-Benchmark:
-run once to warm up, then 10 times, and take average. 
-one small file, few: "ostentation" (8 results)
+For each scenario, the tool is run once to "warm up", then the best of ten runs is selected.
+
+Since the time taken to print many results to stdout is **not** negligible (making it an interesting part of the performance measurement), results are always printed to stdout.
+
+Since even Ripgrep took over 10mins in the "large file, many matches" test, I've decided to strike out that particular case as uninteresting and unlikely.
+
+In the Shake, few: "ostentation" (8 results)
 one small file, many: "the" (39577 results)
 
+large file: "It was just a dream"
 
-|                                       | Few matches | Many matches |   |   |
-|---------------------------------------|-------------|--------------|---|---|
-| One small file (5.5mb)                |     0.059s        |              |   |   |
-| One large file (13.3gb)               |             |              |   |   |
-| Many nested small files (136 x 5.5mb) |   (not yet implemented)             |              |   |   |
+### Side quest complete: back to Part 1 
+
+#### Toygrep v1: benchmark results
+
+|                                       | Query w/ few matches | Query w/ many matches |
+|---------------------------------------|-------------|--------------|
+| One small file (5.5mb)                |   0.040s    | 5.607s       |
+| One large file (13.3gb)               | 1m11.489s   | N/A |
+| Many nested small files (136 x 5.5mb) |   (not implemented yet)    | (not implemented yet)              |
+
+For comparison, here's Ripgrep's results:
+
+|                                       | Query w/ few matches | Query w/ many matches |
+|---------------------------------------|-------------|--------------|
+| One small file (5.5mb)                |  0.035s     | 6.310s       |
+| One large file (13.3gb)               |  33.413s  | N/A |
+| Many nested small files (136 x 5.5mb) |   (not tested yet) | (not tested yet)              |
+
+We learn a couple of things:
+First, searching one small file is easy, especially when you're not doing line coloring, looking for .gitignore files, or highlighting matches like Ripgrep. You can probably just read it into memory. No harm done.
+
+Searching a large file (properly) is harder. Not shown in the above benchmarks is a fact you may already have deduced: Toygrep V1 used **12.2 gigabytes** of memory for nearly entire duration of its 1min+ runtime (we loaded the whole file into memory, remember?)
+
+Ripgrep searched the same file, then printed the result with features like line numbering and match-coloring, in roughly half the time as Toygrep V1... and it only used a maximum of 1.2 **megabytes** while doing so.
+
+This is definitely an expected result, but it reaffirms the fact that searching files big and small, many and few, with great performance and minimal memory usage, is **not** an easy task.  And we haven't even gotten to recursive directory searching yet :)
