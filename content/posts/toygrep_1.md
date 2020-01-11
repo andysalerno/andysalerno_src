@@ -8,6 +8,14 @@ draft: true
 
 Toygrep [(github link)](https://github.com/andysalerno/toygrep) is an attempt to build a simple [Ripgrep](https://github.com/BurntSushi/ripgrep) clone using async/await, powered by [async-std](https://docs.rs/async-std/1.4.0/async_std/). While Ripgrep is a mature, fully-featured, production-ready tool, Toygrep is purely educational and intends to achieve as much as possible as simply as possible, while using only a few dependencies such as the regex crate that powers Ripgrep.
 
+This page serves as the first part in a multi-part series on the development of Toygrep.
+
+The tentative overview of the parts in this series:  
+Part 1: "Hello, world", aka "The dumbest thing that works" (this part)  
+Part 2: The LineBuffer (coming soon)  
+Part 3: The Printer (coming soon)  
+Part 4: Filesystem traversing  (coming soon)
+
 #### Features
 - [x] Fast recursive file search of regex patterns (via regex crate)
 - [x] Search piped input streams
@@ -25,6 +33,7 @@ No current plans to implement these, but maybe in the future:
 
 I had a few motivations for creating Toygrep; I wanted to answer some questions, in no particular order:
 1. Ripgrep makes use of an internal work scheduler, one of (many) design decisions that help it achieve its famous performance.  If I use async/await + async-std to do this for me, how close can I get to its speed?
+1. Speaking of async-std, a grep's job is very "standard library" heavy--opening files, reading from files, printing to stdout, etc.  What performance improvements can we get by simply dropping in async-std for all these std operations?
 1. On a scale of "painful" to "delightful", where is is async/await in Rust today for a project like this?
 1. What subset of Ripgrep functionality/performance can be achieved in a short two-week period as a personal project?
 1. What can I achieve in a personal a project over a few weeks' time during my winter holiday?
