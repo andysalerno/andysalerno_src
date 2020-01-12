@@ -11,8 +11,8 @@ Toygrep [(github link)](https://github.com/andysalerno/toygrep) is an attempt to
 This page serves as the first part in a multi-part series on the development of Toygrep.
 
 The tentative overview of the parts in this series:  
-[Part 1: "Hello, world", aka "The dumbest thing that works" (this part)](#toygrep)  
-Part 2: The LineBuffer (coming soon)  
+[Part 1: "Hello, world", aka "The dumbest thing that works" (this part)]({{< ref "toygrep_1.md" >}})  
+[Part 2: The LineBuffer]({{< ref "toygrep_2.md" >}})  
 Part 3: The Printer (coming soon)  
 Part 4: Filesystem traversing  (coming soon)
 
