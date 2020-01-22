@@ -36,6 +36,23 @@ Another type, `AsyncLineBufferReader`, will hold the `AsyncLineBuffer` and give 
 
 Let's use a visual representation of AsyncLineBuffer to understand how it works.
 
+#### Visual example
+
+At the lowest level, the buffer is a vector of bytes in memory.
+
+We're going to additionally imagine that this vector in memory is split into three chunks.
+
+For simplicity, let's call the chunks the **consumed** chunk, the **working** chunk, and the **remaining** chunk.
+
+For example, our buffer in memory may look like this:
+```Rust
+buffer:
+    [___hello.\n______] (len 16)
+       a^       ^b
+```
+
+The **consumed** chunk is everything before `a`; the **working** chunk is between `a` and `b`, and the **remaining** chunk is from `b` to the end of the buffer. (In the above example, values outside the **working** chunk are shown as `_` for simplicity, but will be "real" values in practice.)
+
 #### Example 1: Happy path
 
 Assume this is the starting state of the buffer:
@@ -122,11 +139,14 @@ line_break_idxs:
 []
 ```
 
+Note that the original content `Hello\n` didn't go anywhere. It's still there, taking up space in our byte buffer. We've simply updated the `start` position to make all operations in our buffer "start" after the consumed portion.
+
+
 #### Example 2: Overflow
 
 Let's see what happens when the content we're reading from can't fit entirely in the buffer.
 
-This is our content:
+This is our the content of our source:
 
 ```
 Leave the gun.\n
@@ -154,7 +174,7 @@ The buffer reader checks to see if we have any full lines now.
 
 We do!
 
-So just like in the first example, we call `consume_line()` on the buffer to get back a `LineResult`. The buffer state now looks like this:
+So just like in the first example, we call `consume_line()` on the buffer to get back a `LineResult`, which contains a slice reference to the portion: `Leave the gun.\n`. The buffer state now looks like this:
 
 ```Rust
 buffer:
@@ -169,9 +189,9 @@ Cool. We ask the buffer reader to give us the next line.
 
 And things get interesting.
 
-I didn't mention this before, but whenever we ask the buffer to `fill()`, it first checks to see if we must roll the contents back to the start.
+I didn't mention this before, but whenever we ask the buffer to `fill()`, it first checks to see if we should roll the contents back to the start.
 
-What does this mean? If the buffer contains any already-consumed lines (i.e. has a non-zero `start` value), we can regain some space by sliding `start` back to zero.
+What does this mean? If the buffer contains any already-consumed lines (i.e. has a non-zero `start` value), we can regain some space by sliding `start` back to zero. 
 
 We call `roll_to_front()`, which copies everything in the `start` to `end` portion of the buffer to the front of the buffer, resulting in this state:
 ```Rust
@@ -185,9 +205,9 @@ line_break_idxs:
 
 This is actually one of the most important details of Ripgrep and Toygrep's implementations, and a very valuable lesson I learned from Ripgrep regarding performance.
 
-As a programmer, it's easy to get stuck in the mindset that "copying == bad". If you're like me, your first intuition might be something like this:
+As a programmer, it's easy to get stuck in the mindset that "copying == bad". Why should I spend so much time copying data from one side of a memory buffer to another? If you're like me, your first intuition might be something like this instead:
 
-- When we find a complete line, instead of returning a slice into the buffer, split the buffer in-place at the linebreak and return an owning vector of the line
+- When we find a complete line, instead of returning a borrowed slice into the buffer, split the buffer in-place at the linebreak and return an owning vector of the line.
 - The `start` position of the buffer is now back at `0`, since we split off everything before it.
 
 Or, visually, do this:
@@ -196,7 +216,7 @@ buffer:
     [Leave the gun.\n][T] (len 1)
                       ^split vector here, in place
     ^^^^^^^^^^^^^^^^^^you get this whole chunk back, as an owned vec
-                      ^my new inner buffer starts here
+                      ^my inner buffer now starts here
 
 line_break_idxs:
 []
@@ -208,8 +228,16 @@ buffer:
     [Leave the gun.\n][Take the cannoli] (len 16)
                       ^split vector here, in place
     ^^^^^^^^^^^^^^^^^^you get this whole chunk back, as an owned vec
-                        ^^^^^^^^^^^^^^^my next read gives me this
+                        ^^^^^^^^^^^^^^^my next read expands the vector back to size 16 and populates it from the source
 
 line_break_idxs:
 []
 ```
+
+This was how my first implementation worked, since it seems the most obvious: when you ask to consume a line, obviously I should pass ownership of it to you, right? It's yours now.
+
+Let's compare performance of these two strategies.
+
+### Benchmarking AsyncLineBuffer
+
+To test the effectiveness of the 
