@@ -48,6 +48,7 @@ menu:
 
 
 params:
+  css: /custom.css
   mainSections: ["posts"]
   showMetaDates: true
   showMetaLinks: true

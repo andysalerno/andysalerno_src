@@ -2,6 +2,7 @@
 {{- $showfull := default false $.Site.Params.showFullContent }}
 {{- $pagepool := where $.Site.RegularPages "Type" "in" $.Site.Params.mainSections }}
 {{- range $idx, $_ := (.Paginate $pagepool).Pages }}
+<div class="main-content">
 <div{{ if and $showfull $idx }} class="post-divider"{{ end }}>
   <div>
     <h2 class="post-title">
@@ -13,6 +14,7 @@
   <div>
     {{ cond $showfull .Content .Summary }}
   </div>
+</div>
 </div>
 {{- end }}
 {{ partial "pagination.html" . }}
