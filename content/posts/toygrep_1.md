@@ -1,5 +1,5 @@
 ---
-title: "(What I learned) Creating Toygrep, a simple Ripgrep clone (Part 1)"
+title: "Creating Toygrep, a simple Ripgrep clone (Part 1)"
 date: 2019-11-30T00:58:25-08:00
 draft: true
 ---
@@ -11,7 +11,7 @@ Toygrep [(github link)](https://github.com/andysalerno/toygrep) is an attempt to
 This page serves as the first part in a multi-part series on the development of Toygrep.
 
 The tentative overview of the parts in this series:  
-[Part 1: "Hello, world", aka "The dumbest thing that works" (this part)]({{< ref "toygrep_1.md" >}})  
+[Part 1: "Hello, world", or "The dumbest thing that works" (this part)]({{< ref "toygrep_1.md" >}})  
 [Part 2: The LineBuffer]({{< ref "toygrep_2.md" >}})  
 Part 3: The Printer (coming soon)  
 Part 4: Filesystem traversing  (coming soon)
@@ -24,7 +24,7 @@ Part 4: Filesystem traversing  (coming soon)
 - [x] Colored and grouped output by default
 
 I plan to implement the following in time:
-- [ ] .gitignore parsing a la Ripgrep
+- [ ] respect .gitignore a la Ripgrep
 
 No current plans to implement these, but maybe in the future:
 - [ ] searching within archives a la Ripgrep
@@ -33,7 +33,7 @@ No current plans to implement these, but maybe in the future:
 
 I had a few motivations for creating Toygrep; I wanted to answer some questions, in no particular order:
 1. Ripgrep makes use of an internal work scheduler, one of (many) design decisions that help it achieve its famous performance.  If I use async/await + async-std to do this for me, could this match Ripgrep's speed?
-1. Speaking of async-std, a grep's job is very "standard library" heavy--opening files, reading from files, printing to stdout, etc.  What performance improvements can we get by simply dropping in async-std for all these std operations?
+1. Speaking of async-std, a grep's job is very "standard library" heavy -- opening files, reading from files, printing to stdout, etc.  What performance improvements can we get by simply dropping in async-std for all these std operations?
 1. On a scale of "painful" to "delightful", where is is async/await in Rust today for a project like this?
 1. What subset of Ripgrep functionality/performance can be achieved in a short two-week period as a personal project?
 1. What can I achieve in a personal a project over a few weeks' time during my winter holiday?
@@ -119,7 +119,7 @@ Benchmarking is broken down into a matrix of several common scenarios:
 |                                       | Query w/ few matches | Query w/ many matches |
 |---------------------------------------|-------------|--------------|
 | One small file (5.5mb)                |             |              |
-| One large file (13.3gb)               |             |  (N/A)       |
+| One large file (12.2gb)               |             |  (N/A)       |
 | Many nested small files (136 x 5.5mb) |             |              |
 
 The 5.5mb "small" file contains the full works of Shakespeare, [from Project Gutenberg](http://www.gutenberg.org/ebooks/100).  
@@ -145,7 +145,7 @@ large file: "It was just a dream"
 |                                       | Query w/ few matches | Query w/ many matches |
 |---------------------------------------|-------------|--------------|
 | One small file (5.5mb)                |   0.040s    | 5.607s       |
-| One large file (13.3gb)               | 1m11.489s   | N/A |
+| One large file (12.2gb)               | 1m11.489s   | N/A |
 | Many nested small files (136 x 5.5mb) |   (not implemented yet)    | (not implemented yet)              |
 
 For comparison, here's Ripgrep's results:
@@ -153,11 +153,11 @@ For comparison, here's Ripgrep's results:
 |                                       | Query w/ few matches | Query w/ many matches |
 |---------------------------------------|-------------|--------------|
 | One small file (5.5mb)                |  0.035s     | 6.310s       |
-| One large file (13.3gb)               |  33.413s  | N/A |
+| One large file (12.2gb)               |  33.413s  | N/A |
 | Many nested small files (136 x 5.5mb) |   (not tested yet) | (not tested yet)              |
 
 We learn a couple of things:
-First, searching one small file is easy, especially when you're not doing line coloring, looking for .gitignore files, or highlighting matches like Ripgrep. You can probably just read it into memory. No harm done.
+First, searching one small file is easy, especially when you're not doing line coloring or highlighting matches like Ripgrep. You can probably just read it into memory. No harm done.
 
 Searching a large file (properly) is harder. Not shown in the above benchmarks is a fact you may already have deduced: Toygrep V1 used **12.2 gigabytes** of memory for nearly the entire duration of its 1min+ runtime (we loaded the whole file into memory, remember?)
 

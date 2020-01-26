@@ -1,5 +1,5 @@
 ---
-title: "(What I learned) Creating Toygrep, a simple Ripgrep clone (Part 2)"
+title: "Creating Toygrep, a simple Ripgrep clone (Part 2)"
 date: 2020-01-01T00:58:25-08:00
 draft: true
 ---
