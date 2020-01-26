@@ -1,6 +1,7 @@
 ---
 title: "Creating Toygrep, a simple Ripgrep clone (Part 1)"
 date: 2019-11-30T00:58:25-08:00
+summary: "Part 1 in a series on Toygrep."
 draft: true
 ---
 

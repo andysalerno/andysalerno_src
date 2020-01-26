@@ -1,0 +1,9 @@
+<article>
+    <div id="photo-container" class="column-container photo-container">
+        {{ range sort (readDir "content/images") }}
+        <img src="/images/{{ .Name }}" class="lazy" id="photo" />
+        <br>
+        {{ end }}
+        {{ .Content }}
+    </div>
+</article>

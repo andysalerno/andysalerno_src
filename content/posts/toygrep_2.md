@@ -1,6 +1,7 @@
 ---
 title: "Creating Toygrep, a simple Ripgrep clone (Part 2)"
 date: 2020-01-01T00:58:25-08:00
+summary: "Part 2 in a series on Toygrep."
 draft: true
 ---
 
@@ -8,11 +9,11 @@ This is Part 2 of the series on ToyGrep.  [Click here for Part 1.]({{< ref "toyg
 
 # Part 2: Reading smarter with AsyncLineBuffer
 
-The V1 of ToyGrep was reasonably speedy for smaller files, but struggled with larger files. And worst of all, it used O(n) memory on the size of the file, which is absolutely not desirable.
+The V1 of ToyGrep was reasonably speedy for smaller files, but struggled with larger files. And worst of all, it used O(n) memory on the size of the file, loading the entire file into memory, which is absolutely not desirable.
 
 It would be much smarter to have a sliding-window buffer that scans across the file, limiting the amount of memory used.
 
-(It would also be possible to use memory maps, which Ripgrep will sometimes do based upon the scenario, but I found the line buffer to be the simplest all-around approach.)
+(It would also be possible to use memory maps, which Ripgrep will sometimes do based upon the scenario, but to remain simple, the line buffer is adequate for nearly all scenarios.)
 
 Creating a file-reading buffer for regex line searching is not as simple as you might first guess.
 

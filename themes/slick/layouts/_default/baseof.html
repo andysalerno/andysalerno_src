@@ -39,7 +39,8 @@
   {{ "<!--<![endif]-->" | safeHTML }}
   <link rel="stylesheet" href="{{ $.Site.BaseURL }}static/custom.css" />
   {{- $script := resources.Get "script.js" | resources.Fingerprint }}
-  <script defer src="{{ $script.RelPermalink }}"></script>
+  <script defer src="{{ $script.RelPermalink }}"></script> 
+  <script src="/static/lazy.js"></script>
 </head>
 <body>
 <div class="pure-g">
