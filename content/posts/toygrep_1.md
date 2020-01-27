@@ -41,6 +41,8 @@ I had a few motivations for creating Toygrep; I wanted to answer some questions,
 1. How is Ripgrep designed, and what design decisions give it such incredible performance?
 1. What can I learn from Ripgrep?
 
+Perhaps most of all, Ripgrep is a fascinating project to study. I love Rust, and Ripgrep demonstrates how powerful the core pillars of Rust can be; Ripgrep profits from memory safety guarantees, fearless concurrency, first-class project organization via crates, and a friendly dev community to become possibly the best "grep" ever. 
+
 In this series of posts, I will give an overview of the development process, discuss things I learned or things that surprised me, and attempt to answer the questions listed above.
 
 So let's jump in!

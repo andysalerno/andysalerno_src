@@ -9,9 +9,9 @@ This is Part 2 of the series on ToyGrep.  [Click here for Part 1.]({{< ref "toyg
 
 # Part 2: Reading smarter with AsyncLineBuffer
 
-The V1 of ToyGrep was reasonably speedy for smaller files, but struggled with larger files. And worst of all, it used O(n) memory on the size of the file, loading the entire file into memory, which is absolutely not desirable.
+The "hello world" ToyGrep from Part 1 was reasonably speedy for smaller files, but struggled with larger files. And worst of all, it used O(n) memory on the size of the file, loading the entire file into memory, which is absolutely not desirable.
 
-It would be much smarter to have a sliding-window buffer that scans across the file, limiting the amount of memory used.
+It would be much smarter to have a sliding-window buffer that scans across the file, limiting the amount of memory used at any given time.
 
 (It would also be possible to use memory maps, which Ripgrep will sometimes do based upon the scenario, but to remain simple, the line buffer is adequate for nearly all scenarios.)
 
@@ -29,36 +29,50 @@ In Toygrep, this is handled by `AsyncLineBuffer`.
 
 ### AsyncLineBuffer
 
-Toygrep's `AsyncLineBuffer` is modeled after [Ripgrep's `LineBuffer`](https://github.com/BurntSushi/ripgrep/blob/master/grep-searcher/src/line_buffer.rs), with a few simplifications that don't seem to harm performance.
+Toygrep's `AsyncLineBuffer` is modeled after [Ripgrep's `LineBuffer`](https://github.com/BurntSushi/ripgrep/blob/master/grep-searcher/src/line_buffer.rs), with one or two simplifications.
 
-The `AsyncLineBuffer` wraps the underlying byte buffer, and handles the primitive behavior of the buffer, such as filling itself from a source and keeping track of its state.
+The `AsyncLineBuffer` wraps the underlying byte buffer, and handles the primitive behavior of the buffer, such as filling itself from a source and keeping track of its state. It exposes no public fields or methods outside of its crate. It is constructed via a simple `AsyncLineBufferBuilder`.
 
-Another type, `AsyncLineBufferReader`, will hold the `AsyncLineBuffer` and give it some higher-level functionality that make it friendlier to use, such as extracting lines from the buffer.
+Another type, `AsyncLineBufferReader`, will hold the `AsyncLineBuffer` and expose the interesting functionality: `read_line()`.
 
 Let's use a visual representation of AsyncLineBuffer to understand how it works.
 
 #### Visual example
 
-At the lowest level, the buffer is a vector of bytes in memory.
+At the lowest level, the buffer is a vector of bytes in memory, owned by the `AsyncLineBuffer`.
 
 We're going to additionally imagine that this vector in memory is split into three chunks.
 
 For simplicity, let's call the chunks the **consumed** chunk, the **working** chunk, and the **remaining** chunk.
 
 For example, our buffer in memory may look like this:
-```Rust
+```
 buffer:
     [___hello.\n______] (len 16)
-       a^       ^b
+   start^       ^end
 ```
 
-The **consumed** chunk is everything before `a`; the **working** chunk is between `a` and `b`, and the **remaining** chunk is from `b` to the end of the buffer. (In the above example, values outside the **working** chunk are shown as `_` for simplicity, but will be "real" values in practice.)
+The **consumed** chunk is everything before `start`; the **working** chunk is from `start` until `end`, and the **remaining** chunk is from `end` to the end of the buffer. (In the above example, values outside the **working** chunk are shown as `_` for simplicity, but will be "real" values in practice.)
+
+A psuedo-code explanation of the algorithm that powers `AsyncBufferReader::read_line()` is like this:
+
+```
+while there are no completed lines in the buffer:
+    roll the buffer to the front (explained later).
+    if the 'remaining' chunk is length 0, grow the buffer.
+    read into the 'remaining' chunk until it is totally full or the source is exhausted.
+    advance the 'working' chunk bounds to include everything we just read into 'remaining'.
+
+get a slice of the next available line in the buffer.
+advance the 'consumed' chunk bounds to include that line.
+return the slice.
+```
 
 #### Example 1: Happy path
 
 Assume this is the starting state of the buffer:
 
-```Rust
+```
 buffer:
     [________________] (len 16)
 start^end
@@ -67,11 +81,16 @@ line_break_idxs:
 []
 ```
 
-We pass the buffer something it can [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html) from and ask it to `fill()` itself.
+We ask the `AsyncBufferReader` to `read_line()`.
+
+The `AsyncLineBufferReader` asks the `AsyncLineBuffer` if it has any lines ready for us (i.e. is there any terminal line position in `line_break_idxs`.)
+
+The `AsyncLineBuffer` says "No."
+
 
 The declaration of `fill` looks like this:
 
-```Rust
+```rust
 async fn fill<R>(&mut self, mut reader: R) -> bool
     where
         R: async_std::io::Read + std::marker::Unpin,
@@ -85,7 +104,7 @@ Hello.\n
 
 The buffer will be in this state after it `fill`s itself:
 
-```Rust
+```
 buffer:
     [Hello.\n_________] (len 16)
 start^       ^end
@@ -94,7 +113,7 @@ line_break_idxs:
 [6]
 ```
 
-It read from the source into the byte vector, then looked for any line breaks in the content, and found one at index `6`, so it pushed `6` into the queue of `line_break_idxs`.
+It read from the source into the byte vector, then scanned for any line breaks in the content, and found one at index `6`, so it pushed `6` into the queue of `line_break_idxs`.
 
 The `AsyncLineBufferReader` exposes `read_line()`, with a declaration like this:
 
@@ -102,7 +121,7 @@ The `AsyncLineBufferReader` exposes `read_line()`, with a declaration like this:
 async fn read_line<'a>(&'a mut self) -> Option<LineResult<'a>>;
 ```
 
-When the owner calls `read_line()`, the buffer reader will call `fill()` on its buffer until it contains at least one line, which we can detect if `line_break_idxs` isn't empty, or until the source is exhausted.
+As described in the psuedo-code earlier, when the owner calls `read_line()`, the buffer reader will call `fill()` on its buffer until it contains at least one line, which we can detect if there's any value(s) in `line_break_idxs`, or until the source is exhausted.
 
 It then returns a `LineResult`, which looks like this:
 
@@ -131,7 +150,7 @@ fn consume_line(&mut self) -> Option<&[u8]> {
 ```
 
 Our buffer now looks like this:
-```Rust
+```
 buffer:
     [Hello.\n_________] (len 16)
         start^end
@@ -147,22 +166,33 @@ Note that the original content `Hello\n` didn't go anywhere. It's still there, t
 
 Let's see what happens when the content we're reading from can't fit entirely in the buffer.
 
-This is our the content of our source:
+This is the content of our source:
 
 ```
 Leave the gun.\n
 Take the cannoli.\n
 ```
 
+We are starting with a totally unused buffer:
+```
+buffer:
+    [________________] (len 16)
+start^end
+
+line_break_idxs:
+[]
+```
 We ask the buffer reader to please `read_line()`.
 
 The buffer reader sees there are no lines in the buffer, so it asks the buffer to please `fill()` itself.
 
-The buffer reads as much as it can from the source into its byte vector.
+The buffer reads as much as it can from the source into its byte vector in the **remaining** chunk.
+
+(Since we started with a brand new buffer, the **remaining** chunk is the entire buffer.)
 
 This is the result:
 
-```Rust
+```
 buffer:
     [Leave the gun.\nT] (len 16)
 start^                ^end
