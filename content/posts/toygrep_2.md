@@ -210,13 +210,14 @@ buffer:
 start^        ^end
 ```
 
+This is actually one of the most important details of Ripgrep and Toygrep's implementations, and a very valuable lesson I learned from Ripgrep regarding performance. So valuable, in fact, that I'm going to completely digress into a little aside on what it means.
 
-This is actually one of the most important details of Ripgrep and Toygrep's implementations, and a very valuable lesson I learned from Ripgrep regarding performance.
+#### Quick aside: performance intuition {
 
 As a programmer, when thinking about performance, it's easy to get stuck in the mindset that "copying == bad". Why should I spend so much time copying data from one side of a memory buffer to another? If you're like me, your first intuition might be something like this instead:
 
 - When we find a complete line, instead of returning a borrowed slice into the vector, split the vector in-place at the linebreak and return an owning vector of the line.
-- The `start` position of the buffer is now back at `0`, since we split off everything before it.
+- The `start` position of the buffer is now back at `0`, since we split off the entire **consumed** segment.
 
 Or, visually, do this:
 ```
@@ -232,8 +233,50 @@ line_break_idxs:
 
 Cool, the caller gets ownership of the line (which they want anyway), and we didn't do any copying. This feels like a "free" operation. Instead of letting crud build up in the **consumed** segment, there is no **consumed** segment at all. The next time we try to read, all we have to do is grow the byte vector to make more room.
 
-Let's compare performance of these two strategies.
+This approach--let's call it the "split and grow" approach--is the one I implemented at first, since it felt the most intuitive to me. But it has a fatal performance flaw compared to the "copy to front" approach.
+
+The flaw is: now that we've split the vector, we must grow it to keep writing into it.
+
+Guess what growing a vector implies?
+
+That's right: copying.  Which is what we were trying to avoid with this whole "splitting" charade anyway.
+
+If it hasn't clicked, when you grow a vector (which is guaranteed to be a contiguous range of memory), it may require *reallocating* that vector elsewhere in memory to maintain the "contiguous range" guarantee. I.e., I add fifty more bytes to my vec, but I can't allocate fifty more bytes in a row without bumping into some other tenant. So we need to pick up shop and copy ourself somewhere with room.
+
+#### } Quick aside over
+
+
+
+Let's benchmark the two approaches and see what the data says.
 
 ### Benchmarking AsyncLineBuffer
 
-To test the effectiveness of the 
+#### Historical results from Part 1
+
+"Hello world" Toygrep from Part 1 results:
+
+|                                       | Query w/ few matches | Query w/ many matches |
+|---------------------------------------|-------------|--------------|
+| One small file (5.5mb)                |   0.040s    | 5.607s       |
+| One large file (12.2gb)               | 1m11.489s   | N/A |
+| Many nested small files (136 x 5.5mb) |   (not implemented yet)    | (not implemented yet)              |
+
+Ripgrep's results:
+
+|                                       | Query w/ few matches | Query w/ many matches |
+|---------------------------------------|-------------|--------------|
+| One small file (5.5mb)                |  0.035s     | 6.310s       |
+| One large file (12.2gb)               |  33.413s  | N/A |
+| Many nested small files (136 x 5.5mb) |   (not tested yet) | (not tested yet)              |
+
+#### "Copy to front" approach
+
+First up we benchmark the "copy to front" approach. The results:
+
+|                                       | Query w/ few matches | Query w/ many matches |
+|---------------------------------------|-------------|--------------|
+| One small file (5.5mb)                |  0.042s     | 6.385s       |
+| One large file (12.2gb)               |  34.389s  | N/A |
+| Many nested small files (136 x 5.5mb) |   (not tested yet) | (not tested yet)              |
+
+Hey, cool! Compared to our "hello world" Toygrep from Part 1, the "one smile file" test gives basically the same result for the few-results query. Oddly, we somehow lose ~700ms on the many-results query, putting us right alongside Ripgrep 
