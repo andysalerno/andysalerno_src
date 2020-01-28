@@ -179,7 +179,7 @@ Cool. Now we call `read_line()` on the `Reader` again, to get the next line.
 
 And things get interesting.
 
-Clearly, there's no space left in the buffer to read into. Our **remaining** segment is length `0`.
+Clearly, there's no space left in the buffer to read into. Our **remaining** segment is length `0`, and we're only partway through the next line.
 
 So we must expand it, right?
 
@@ -241,19 +241,19 @@ Guess what growing a vector implies?
 
 That's right: copying.  Which is what we were trying to avoid with this whole "splitting" charade anyway.
 
-If it hasn't clicked, when you grow a vector (which is guaranteed to be a contiguous range of memory), it may require *reallocating* that vector elsewhere in memory to maintain the "contiguous range" guarantee. I.e., I add fifty more bytes to my vec, but I can't allocate fifty more bytes in a row without bumping into some other tenant. So we need to pick up shop and copy ourself somewhere with room.
+If it hasn't clicked, when you grow a vector (which is guaranteed to be a contiguous range of memory), it may require *reallocating* that vector elsewhere in memory to maintain the "contiguous range" guarantee. Imagine I add fifty more bytes to my vec, but I can't allocate fifty more bytes in a row without bumping into some other tenant. So we need to pick up shop and copy ourself somewhere with room.
+
+In short, it's probably faster to re-use memory in a buffer you already have (which may involve copying), than to grow the buffer, which incurs the cost of allocating more memory and perhaps even *reallocating* and copying.
 
 #### } Quick aside over
 
-
-
-Let's benchmark the two approaches and see what the data says.
+Let's see what the benchmark says about our `AsyncLineBuffer` when compared to the "stupidest thing that works" implementation from Part 1.
 
 ### Benchmarking AsyncLineBuffer
 
 #### Historical results from Part 1
 
-"Hello world" Toygrep from Part 1 results:
+To refresh your memory, "stupid" Toygrep from Part 1 results, which read the entire file into memory:
 
 |                                       | Query w/ few matches | Query w/ many matches |
 |---------------------------------------|-------------|--------------|
@@ -269,7 +269,7 @@ Ripgrep's results:
 | One large file (12.2gb)               |  33.413s  | N/A |
 | Many nested small files (136 x 5.5mb) |   (not tested yet) | (not tested yet)              |
 
-#### "Copy to front" approach
+#### Using `AsyncLineBuffer`
 
 First up we benchmark the "copy to front" approach. The results:
 
