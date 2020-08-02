@@ -1,0 +1,4 @@
+baseURL = "https://andysalerno.com/"
+languageCode = "en-us"
+title = "Blog"
+theme = "paper"
