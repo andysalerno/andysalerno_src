@@ -10,7 +10,7 @@
     <h1>{{ .Title }}</h1>
   </header>
 
-  <ul>
+  <ul class="post-list">
     {{- range .Site.RegularPages }}
     <li class="list-item">
       <a href="{{ .Permalink }}">{{ .Title }}</a>

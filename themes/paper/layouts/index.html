@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="{{ .Site.LanguageCode }}">
 {{- partial "head.html" . }}
-{{ "<!-- list.html -->" | safeHTML }}
+{{ "<!-- index.html -->" | safeHTML }}
 
 <body class="list home">
     {{- partial "header.html" . }}
 
-    <header class="page-header">
-        <h1>{{ .Title }}</h1>
-    </header>
+    <div class="index-content">{{ .Content }}</div>
 
-    <ul>
+    <ul class="post-list">
         {{- range .Site.RegularPages }}
         <li class="list-item">
             <a href="{{ .Permalink }}">{{ .Title }}</a>
