@@ -4,21 +4,21 @@
 {{ "<!-- list.html -->" | safeHTML }}
 
 <body class="list home">
-  {{- partial "header.html" . }}
+    {{- partial "header.html" . }}
 
-  <header class="page-header">
-    <h1>{{ .Title }}</h1>
-  </header>
+    <header class="page-header">
+        <h1>{{ .Title }}</h1>
+    </header>
 
-  <ul>
-    {{- range .Site.RegularPages }}
-    <li class="list-item">
-      <a href="{{ .Permalink }}">{{ .Title }}</a>
-    </li>
-    {{- end }}
-  </ul>
+    <ul>
+        {{- range .Site.RegularPages }}
+        <li class="list-item">
+            <a href="{{ .Permalink }}">{{ .Title }}</a>
+        </li>
+        {{- end }}
+    </ul>
 
-  {{- partial "footer.html" . }}
+    {{- partial "footer.html" . }}
 </body>
 
 </html>

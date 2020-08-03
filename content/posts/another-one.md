@@ -14,7 +14,7 @@ Spend two hours browsing minimal [Hugo themes](https://themes.gohugo.io/) until 
 
 ## Step 3: Simplify
 
-Why does this "simple" theme include google analytics and disqus?
+Why does this "simple" theme include google analytics, disqus, and javascript auto day/night theme detection?
 
 I should gut it of all the stuff I don't need...
 
