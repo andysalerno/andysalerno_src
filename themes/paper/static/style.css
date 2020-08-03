@@ -1,0 +1,10 @@
+body {
+    max-width: 40em;
+    margin-top: 0.5in;
+    margin-bottom: 0.5in;
+    margin-right: auto;
+    margin-left: auto;
+    font-size: 18px;
+    font-family: serif;
+    line-height: 1.5;
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+{{- partial "head.html" . }}
+{{ "<!-- list.html -->" | safeHTML }}
+
+<body class="{{ if eq .Kind `page` }}single{{ else }}list{{ if .IsHome }} home{{ end }}{{ end }}">
+  {{- partial "header.html" . }}
+
+  {{- $scope := .Site }}
+  {{- if .Title }}
+  <header class="page-header">
+    <h1>{{ .Title }} (Page header title)</h1>
+  </header>
+  {{ $scope = . }}
+  {{ end }}
+
+  {{- $paginator := .Paginate (where $scope.RegularPages ".Params.type" "!=" "page") }}
+
+  <ul>
+    {{- range $index, $page := $paginator.Pages }}
+    <li class="list-item">
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{- end }}
+  </ul>
+
+  {{- partial "footer.html" . }}
+</body>
+
+</html>

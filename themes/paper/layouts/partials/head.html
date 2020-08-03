@@ -1,0 +1,23 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Title -->
+    <title>{{ if .Title }}{{ .Title }} - {{ end }}{{ .Site.Title }}</title>
+    <!-- Meta -->
+    {{- if eq .Kind "page" }}
+    <meta name="description" content="{{ .Summary }}">
+    <meta name="author" content="{{ .Params.author | default .Site.Params.author }}">
+    {{- else }}
+    <meta name="description" content="{{ .Site.Params.description }}">
+    <meta name="author" content="{{ .Site.Params.author }}">
+    {{- end }}
+    <!-- Styles -->
+    <link href="{{ "style.css" | absURL }}" rel="stylesheet">
+    <link href="{{ "custom.css" | absURL }}" rel="stylesheet">
+    <!-- Favicons -->
+    <!-- Generator -->
+    <!-- RSS -->
+    {{ range .AlternativeOutputFormats -}}
+    {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
+    {{ end -}}
+</head>
